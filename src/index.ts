@@ -41,15 +41,24 @@ export default {
 		}
 
 
-		const { pathname, search } = new URL(request.url)
+		const { pathname, search, searchParams } = new URL(request.url)
+		const url = new URL(request.url);
+		const network = searchParams.get('rpc_network') || 'mainnet';
+		// Remove 'network' from the searchParams
+		searchParams.delete('rpc_network');
+		// Construct the proxy URL without the 'network' parameter
+		const proxyUrl = `https://${pathname === '/' ? 'mainnet.helius-rpc.com' : 'api.helius.xyz'}${pathname}?api-key=${env.HELIUS_API_KEY}${searchParams.toString() ? `&${searchParams.toString()}` : ''}`;
+		
+		
 		const payload = await request.text();
-		const proxyRequest = new Request(`https://${pathname === '/' ? 'mainnet.helius-rpc.com' : 'api.helius.xyz'}${pathname}?api-key=${env.HELIUS_API_KEY}${search ? `&${search.slice(1)}` : ''}`, {
-			method: request.method,
-			body: payload || null,
-			headers: {
-				'Content-Type': 'application/json',
-				'X-Helius-Cloudflare-Proxy': 'true',
-			}
+		// Create the proxy request
+		const proxyRequest = new Request(proxyUrl, {
+		  method: request.method,
+		  body: payload || null,
+		  headers: {
+		    'Content-Type': 'application/json',
+		    'X-Helius-Cloudflare-Proxy': 'true',
+		  },
 		});
 
 		return await fetch(proxyRequest).then(res => {
