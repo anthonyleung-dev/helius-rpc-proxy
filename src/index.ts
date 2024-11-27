@@ -36,18 +36,19 @@ export default {
 
 		const upgradeHeader = request.headers.get('Upgrade')
 
-		if (upgradeHeader || upgradeHeader === 'websocket') {
-			return await fetch(`https://mainnet.helius-rpc.com/?api-key=${env.HELIUS_API_KEY}`, request)
-		}
-
-
 		const { pathname, search, searchParams } = new URL(request.url)
 		const url = new URL(request.url);
 		const network = searchParams.get('rpc_network') || 'mainnet';
 		// Remove 'network' from the searchParams
 		searchParams.delete('rpc_network');
+
+		
+		if (upgradeHeader || upgradeHeader === 'websocket') {
+			return await fetch(`https://${network}.helius-rpc.com/?api-key=${env.HELIUS_API_KEY}`, request)
+		}
+		
 		// Construct the proxy URL without the 'network' parameter
-		const proxyUrl = `https://${pathname === '/' ? 'mainnet.helius-rpc.com' : 'api.helius.xyz'}${pathname}?api-key=${env.HELIUS_API_KEY}${searchParams.toString() ? `&${searchParams.toString()}` : ''}`;
+		const proxyUrl = `https://${pathname === '/' ? `${network}.helius-rpc.com` : 'api.helius.xyz'}${pathname}?api-key=${env.HELIUS_API_KEY}${searchParams.toString() ? `&${searchParams.toString()}` : ''}`;
 		
 		
 		const payload = await request.text();
